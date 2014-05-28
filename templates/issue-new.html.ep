@@ -1,0 +1,96 @@
+<%
+  # API
+  my $api = gitprep_api;
+
+  unless ($api->logined) {
+    $self->redirect_to("/$user/$project/issues/");
+    return;
+  }
+  my $op = param('op') || '';
+
+  my $errors;
+  if ($op eq 'create') {
+    # API
+    my $api = gitprep_api;
+    
+  unless ($api->logined) {
+    $self->redirect_to("/$user/$project/issues/");
+    return;
+  }
+##    # Validation
+    my $params = $api->params;
+    my $rule = [
+      issue_title => [
+        ['not_blank' => 'Title is empty.']
+      ],
+      content => [
+        ['not_blank' => 'Content is empty']
+      ]
+   ];
+    my $vc = app->vc;
+    my $vresult = $vc->validate($params, $rule);
+      
+      my $data = $vresult->data;
+    	my $project_user = $user;  
+    my $logged_user = session('user');
+     my $title = $data->{issue_title};
+      my $content = $data->{content};
+      my $manager = app->manager;
+      my $issue_id; 
+      if ($manager->exists_project($user, $project)) {
+        eval {
+          $issue_id = $manager->create_issue(
+            $logged_user,
+            $project_user,
+            $project,
+            $title,
+           	$content
+          );
+        };
+        if (my $e = $@) {
+          app->log->error(url_for . ": $e");
+          $errors = ['Internal error'];
+        }
+        else {
+          $self->redirect_to("/$user/$project/issues/$issue_id");
+          return;
+        }
+      }
+      else {
+
+        $errors = ['Repository doesn\'t exist'];
+        
+      }
+  }
+%>
+
+% layout 'common', title => "Create new issue \x{30fb} $user/$project";
+  
+  %= include '/include/header';
+
+  <div class="container">
+    %= include '/include/project_header';
+    %= include '/include/code_menu', display => 'issues';
+        
+    <div style="margin-top:20px;margin-bottom:15px">
+
+        <div style="font-size:18px">
+          <a class="ubar" href="<%= url_for("/$user/$project") %>">
+            <%= $project %>
+          </a>
+          /
+          <span class="muted">Create new issue</span>
+        </div>
+    </div>
+  
+   <form action="<%= url_for->query(op => 'create') %>" method="post">
+	 <div><b>Title</b></div>
+      <div><%= input_tag 'issue_title', type => 'text', style => 'width:300px' %></div>
+
+      <div><b>Content</b></div>
+      <div><%= text_area 'content', type => 'text', style => 'width:600px' %></div>
+      
+      <input style="margin-top:10px" type="submit" class="btn" value="Create Issue">
+    </form>
+  </div>
+  %= include '/include/footer';

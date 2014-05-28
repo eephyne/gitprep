@@ -114,14 +114,16 @@ sub startup {
   }
   
   # Setup database
+
   $self->manager->setup_database;
-  
   # Model
   my $models = [
     {table => 'user', primary_key => 'id'},
     {table => 'project', primary_key => ['user_id', 'name']},
     {table => 'number', primary_key => 'key'},
-    {table => 'collaboration', primary_key => ['user_id', 'project_name', 'collaborator_id']}
+    {table => 'collaboration', primary_key => ['user_id', 'project_name', 'collaborator_id']},
+		{table => 'issues', primary_key => ['project','issue_id']},
+		{table => 'issues_comments', primary_key => 'row_id'}
   ];
   $dbi->create_model($_) for @$models;
 
@@ -344,6 +346,16 @@ sub startup {
             
             # Get branches and tags
             $r->get('/api/revs' => template '/api/revs');
+
+						# get issues
+            $r->get('/issues/' => template '/issues');
+
+						# add new issue
+            $r->any('/issues/new' => template '/issue-new');
+
+						#get issue
+            $r->get('/issues/*issue_id' => template '/issue');
+
           }
         }
       }

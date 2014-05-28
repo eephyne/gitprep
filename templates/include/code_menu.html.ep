@@ -140,6 +140,11 @@
         <span class="badge"><%= $tags_count > 999 ? '999+' : $tags_count %></span>
       </a>
     </li>
+    <li class="<%= $display eq 'issues' ? 'active' : '' %>">
+      <a href="<%= url_for("/$user/$project/issues") %>">
+        Issues
+      </a>
+    </li>
   </ul>
   
   % if ($display eq 'files' || $display eq 'commits') {
